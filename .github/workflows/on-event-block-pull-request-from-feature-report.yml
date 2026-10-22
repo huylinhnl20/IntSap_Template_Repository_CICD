@@ -1,0 +1,22 @@
+name: on event block pull request from feature report
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  block_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          # If somebody accidentally creates a PR from feature/reports, this is blocked.
+          # The reason is that feature/reports is only used for reports and will in most cases "behind" main
+          # A merge via a PR would mean an "old" main will cause conflicts etc.
+          if [[ "${{ github.head_ref }}" == "feature/reports" ]]; then
+            echo "Pull requests from 'feature/report' are not allowed."
+            gh pr close ${{ github.event.pull_request.html_url }} -c "PRs from 'feature/report' are not allowed!"
+            exit 1
+          fi

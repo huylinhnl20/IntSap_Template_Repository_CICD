@@ -1,0 +1,22 @@
+name: on event create cpi release
+
+on:
+  pull_request:
+    types: [closed]
+  
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Trigger CPI Workflow IntSap_ITM_CICD_Tools Repository
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TARGET_REPO: "IntSap_ITM_CICD_Tools"
+        run: |
+          curl -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            https://api.github.com/repos/${{ github.repository_owner }}/${{ env.TARGET_REPO }}/dispatches \
+            -d '{"event_type": "create-cpi-release", "client_payload": {"cpi_repo_name": "${{ github.repository }}"}}'

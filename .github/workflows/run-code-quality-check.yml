@@ -1,0 +1,41 @@
+name: run code quality check
+
+on:
+  workflow_dispatch:
+    inputs:
+      cpi_all_iflows:
+        description: 'Run CPILint for all iflows in CPI package. default: false'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      cpi_list_iflows:
+        description: 'Run CPILint for Iflow(s) seperated by ;'
+        required: false
+        default: '<iflow01>;<iflow02>;<iflow03>'
+        type: string
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Trigger CPI Workflow IntSap_ITM_CICD_Tools Repository
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TARGET_REPO: "IntSap_ITM_CICD_Tools"
+        run: |
+          curl -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            https://api.github.com/repos/${{ github.repository_owner }}/${{ env.TARGET_REPO }}/dispatches \
+            -d '{
+              "event_type": "code-quality-check",
+              "client_payload": {
+                "cpi_repo_name": "${{ github.repository }}",
+                "cpi_all_iflows": "${{ github.event.inputs.cpi_all_iflows }}",
+                "cpi_list_iflows": "${{ github.event.inputs.cpi_list_iflows }}"
+              }
+            }'
